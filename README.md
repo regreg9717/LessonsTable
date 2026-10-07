@@ -1,21 +1,26 @@
-# 悦享课表 (LightCourse)
+# 悦享课表 (LessonsTable)
 
-一款简洁美观的适用于安卓系统发课表应用：导入 Excel 课表文件，自动生成漂亮的周视图课表。
+一款简洁美观的安卓课表应用：导入 Excel 课表文件（教务系统导出的 .xls / .xlsx 均可），自动生成漂亮的周视图课表，支持周次切换、单双周过滤和值班管理。
+
+**[⬇ 从 Releases 下载安装包](https://github.com/regreg9717/LessonsTable/releases)**（当前最新：v2.0）
 
 ## 功能
 
-- 📥 导入 `.xlsx` 和老式 `.xls` Excel 文件（扩展名不可靠时会自动识别真实格式）
-- 📅 周视图课表：节次 × 星期 网格，课程按名称自动配色
-- 🔆 今天一列在表头高亮，副标题显示日期
-- 👆 点击课程卡片查看教室、教师、时间详情
-- ⏰ 自定义每节课的上下课时间（自动保存）
-- 📤 在 App 菜单里可导出符合格式的模板文件并分享
+- 📥 导入 Excel 课表（.xlsx / .xls），扩展名不可靠时自动识别真实格式
+- 📅 周视图：固定周一~周日 7 列，一屏完整显示、无需横向拖动；课程按名称自动配色
+- 🔁 顶部「◀ 第x周 ▶」切换周次，按上课周次自动过滤课程（单周课只在单周显示），点中间回到本周
+- 🔆 今天所在列的课程卡片使用深色版配色；表头高亮今天
+- 🧱 连堂课合并为一张大卡；大节（1-2、3-4、5-6、7-8 节）之间有贯通分隔线
+- 📌 添加课程/值班：按大节添加（名称+地点），深紫色卡片显示；时段冲突时拒绝并提示；可随时删除
+- ⏰ 自定义每节课上下课时间；设置学期第 1 周日期，周数自动推算
+- 📤 导出符合导入格式的模板 Excel 并分享
+- 💾 课表数据本地保存（SharedPreferences），卸载前一直有效；重新导入不丢失已添加的值班
 
 ## 课表 Excel 格式（两种都支持）
 
 ### ① 教务系统导出的列表格式（优先识别，推荐）
 
-和「我的课表.xls」一样的布局：表头包含 **课程名、上课周次、上课星期、开始节次、结束节次、上课教师、教室名称** 等列，每行是一门课的一次排课：
+表头包含 **课程名、上课周次、上课星期、开始节次、结束节次、上课教师、教室名称** 等列，每行是一门课的一次排课：
 
 | 课程名 | 上课周次 | 上课星期 | 开始节次 | 结束节次 | 上课教师 | 教室名称 |
 |--------|---------|---------|---------|---------|---------|---------|
@@ -34,15 +39,34 @@
 
 - 单元格内容：`课程名@教室@教师`，教室和教师可以省略
 
-`template/课表模板.xlsx` 是格式①的示例；App 菜单里也能导出模板。`testdata/我的课表.xls` 是真实教务导出样例，`app/src/test` 中的单元测试用它验证解析。
+`template/课表模板.xlsx` 是格式①的示例（App 菜单里也能导出）；`testdata/我的课表.xls` 是真实教务导出样例，单元测试用它验证解析。
+
+## 版本历史
+
+| 版本 | 主要变化 |
+|------|---------|
+| v1.0 | 首个版本：Excel 导入、周视图、自动配色 |
+| v1.1 | 周次切换与单双周过滤、固定 7 列、大节分隔线、一屏显示 |
+| v1.2 | 修复当前周显示；分隔线贯通整行；今天列加深 |
+| v1.3 | 更名悦享课表；值班功能；卡片错位修复 |
+| v1.4 | 功能入口整合为父按钮；值班按大节添加；空格子恢复空白 |
+| v2.0 | 添加课程/值班冲突校验；入口改名“添加/删除课程/值班” |
+
+每个版本的 APK 都可在 [Releases](https://github.com/regreg9717/LessonsTable/releases) 下载。
 
 ## 构建
 
-需要 JDK 17+ 和 Android SDK（本机配置在 `local.properties`，指向 `D:/android/Sdk`）。
+需要 JDK 17+ 和 Android SDK。本机构建时 `local.properties` 指向 `D:/android/Sdk`（此文件不入库，clone 后请创建自己的，内容如 `sdk.dir=D\:\\Android\\Sdk`）。
 
 ```bash
 ./gradlew assembleRelease
 # 产物：app/build/outputs/apk/release/app-release.apk
+```
+
+测试（用真实教务导出文件验证解析）：
+
+```bash
+./gradlew :app:testDebugUnitTest
 ```
 
 ## 工程结构
@@ -51,17 +75,20 @@
 app/src/main/java/com/lightcourse/app/
 ├── MainActivity.kt      # 界面与交互（纯代码构建 UI，无 XML 布局）
 ├── Timetable.kt         # 数据模型 + 本地存储（SharedPreferences + JSON）
-├── ExcelParser.kt       # 解析入口（分发/降级）+ 课表结构识别
+├── ExcelParser.kt       # 解析入口（分发/降级）+ 两种课表格式的识别与建表
 ├── XlsxParser.kt        # 手写 .xlsx 解析（zip + XmlPullParser，无第三方依赖）
+├── WeekLogic.kt         # 上课周次匹配（单双周、区间）
 ├── TemplateExporter.kt  # 手写生成模板 .xlsx 并分享
-├── CourseColors.kt      # 课程配色
+├── CourseColors.kt      # 课程配色（浅色卡 / 深色版用于今天列）
 scripts/make_template.js # 生成示例模板的 Node 脚本
-template/课表模板.xlsx    # 示例课表
-keystore/lightcourse.jks # 签名密钥（密码 lightcourse123，别名 lightcourse）
+template/课表模板.xlsx    # 示例课表（教务列表格式）
+testdata/我的课表.xls     # 真实教务导出样例（单测数据）
+keystore/lightcourse.jks # 签名密钥（密码 lightcourse123，别名 lightcourse，仅开发用）
 ```
 
 ## 技术说明
 
 - `.xlsx`：OpenXML（zip + XML），用内置 `ZipInputStream` + `XmlPullParser` 手写解析，避免引入庞大的 poi-ooxml
 - `.xls`：老式 BIFF8 二进制格式，使用 Apache POI（仅 HSSF 部分）读取
+- 界面为纯 Kotlin 代码构建，无 Jetpack Compose；最低支持 Android 8.0（API 26）
 - 签名密钥仅用于本地开发分发；正式上架请更换为自己的密钥并妥善保管
