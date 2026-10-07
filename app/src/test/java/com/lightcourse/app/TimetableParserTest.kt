@@ -27,8 +27,8 @@ class TimetableParserTest {
         val t = parseFixture()
         // 固定显示周一~周日 7 列，周末没课也要有
         assertEquals((0..6).map { "周" + "一二三四五六日"[it] }, t.dayHeaders)
-        // 节次数应为最大结束节次与 8 的较大者（该表最大到 8 节）
-        assertEquals(8, t.periods.size)
+        // 节次数应为最大结束节次与 10 的较大者（即使没课也要显示到第 9-10 节）
+        assertEquals(10, t.periods.size)
     }
 
     @Test

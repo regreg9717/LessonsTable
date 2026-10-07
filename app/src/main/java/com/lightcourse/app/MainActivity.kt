@@ -84,6 +84,9 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.END
         }
+        // 更柔和的阴影：默认 FAB 投影 6dp 偏重，降低高度让过渡更自然
+        fabs.forEach { it.elevation = dp(1).toFloat() }
+        fabMain.elevation = dp(2).toFloat()
         fabs.forEach {
             fabColumn.addView(it, LinearLayout.LayoutParams(WRAP, WRAP).apply { setMargins(0, 0, 0, dp(10)) })
         }

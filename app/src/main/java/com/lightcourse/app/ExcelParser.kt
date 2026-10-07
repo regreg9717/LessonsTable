@@ -121,9 +121,9 @@ object TimetableBuilder {
         }
         if (entries.isEmpty()) return null
 
-        // 固定 7 列（周一~周日），周末没课也要显示
+        // 固定 7 列（周一~周日），周末没课也要显示；节次至少 10 节（含 9-10 节晚课）
         val dayHeaders = (0..6).map { "周" + WEEK_ORDER[it] }
-        val periodCount = maxOf(8, entries.maxOf { it.end }).coerceAtMost(15)
+        val periodCount = maxOf(10, entries.maxOf { it.end }).coerceAtMost(15)
         val times = Timetable.DEFAULT_PERIOD_TIMES
 
         val periods = (0 until periodCount).map { i ->
@@ -207,6 +207,14 @@ object TimetableBuilder {
             val periodLabel = label ?: "第${idx + 1}节"
             periods.add(Period(periodLabel, time.first, time.second))
             cells.add(courseRow)
+        }
+
+        // 保证至少显示 10 节（第 9-10 节晚课也要有行）
+        while (periods.size < 10) {
+            val idx = periods.size
+            val time = periodTimes.getOrNull(idx) ?: ("" to "")
+            periods.add(Period("第${idx + 1}节", time.first, time.second))
+            cells.add(MutableList(7) { null })
         }
 
         if (cells.isEmpty() || cells.all { row -> row.all { it == null } }) return null
