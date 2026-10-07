@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/action_export_template" android:title="@string/export_template" app:showAsAction="never" />
+    <item android:id="@+id/action_set_week_start" android:title="@string/set_week_start" app:showAsAction="never" />
+    <item android:id="@+id/action_period_times" android:title="@string/period_times" app:showAsAction="never" />
+    <item android:id="@+id/action_help" android:title="@string/help" app:showAsAction="never" />
+</menu>

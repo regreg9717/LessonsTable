@@ -1,0 +1,11 @@
+# 本机构建产物与 IDE 配置不入库
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+.cxx/
+.externalNativeBuild/
+captures/
+.DS_Store

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">悦享课表</string>
+    <string name="import_timetable">导入课表</string>
+    <string name="more_actions">功能</string>
+    <string name="collapse_actions">收起</string>
+    <string name="add_duty">添加课程/值班</string>
+    <string name="delete_duty">删除课程/值班</string>
+    <string name="export_template">保存模板</string>
+    <string name="set_week_start">设置第1周</string>
+    <string name="period_times">节次时间</string>
+    <string name="help">使用说明</string>
+    <string name="empty_title">还没有课表</string>
+    <string name="empty_hint">点击下方按钮，导入 Excel 课表\n（支持 .xlsx / .xls）</string>
+    <string name="parse_failed">导入失败：未识别出课表内容，请检查文件格式（见“使用说明”）</string>
+    <string name="import_ok">课表导入成功</string>
+    <string name="today_fmt">今天 %1$s · %2$s</string>
+</resources>

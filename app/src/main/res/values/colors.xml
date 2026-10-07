@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#2E7D6B</color>
+    <color name="primary_dark">#1F5C4F</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="surface">#F6F8F7</color>
+    <color name="surface_cell">#FFFFFF</color>
+    <color name="text_main">#1C1B1F</color>
+    <color name="text_sub">#6B7280</color>
+    <color name="today_pill">#2E7D6B</color>
+    <color name="ic_launcher_background">#2E7D6B</color>
+</resources>
