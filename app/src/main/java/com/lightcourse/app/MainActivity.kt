@@ -84,9 +84,19 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.END
         }
-        // 更柔和的阴影：默认 FAB 投影 6dp 偏重，降低高度让过渡更自然
-        fabs.forEach { it.elevation = dp(1).toFloat() }
-        fabMain.elevation = dp(2).toFloat()
+        // 统一样式：主题绿底白字、胶囊圆角、低高度柔和阴影
+        fun styleFab(f: ExtendedFloatingActionButton, elev: Int) {
+            f.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.primary)
+            )
+            f.setTextColor(0xFFFFFFFF.toInt())
+            f.shapeAppearanceModel = f.shapeAppearanceModel.toBuilder()
+                .setAllCornerSizes(dp(26).toFloat())
+                .build()
+            f.elevation = dp(elev).toFloat()
+        }
+        fabs.forEach { styleFab(it, 1) }
+        styleFab(fabMain, 2)
         fabs.forEach {
             fabColumn.addView(it, LinearLayout.LayoutParams(WRAP, WRAP).apply { setMargins(0, 0, 0, dp(10)) })
         }
@@ -447,7 +457,7 @@ class MainActivity : AppCompatActivity() {
         container.addView(card, FrameLayout.LayoutParams(MATCH, MATCH).apply {
             setMargins(dp(1), dp(1), dp(1), dp(1))
         })
-        container.setOnClickListener { showCellDialog(cell, p, d) }
+        container.setOnClickListener { showCellDialog(cell, p, d, span) }
         return container
     }
 
@@ -476,40 +486,100 @@ class MainActivity : AppCompatActivity() {
 
     // ---------- 对话框 ----------
 
-    private fun showCellDialog(c: CourseCell, periodIdx: Int, dayIdx: Int) {
+    /** 课程详情：卡片式对话框，头部为课程配色，时间显示整个大节（含课间休息） */
+    private fun showCellDialog(c: CourseCell, periodIdx: Int, dayIdx: Int, span: Int) {
         val t = timetable ?: return
         val day = t.dayHeaders.getOrNull(dayIdx) ?: ""
-        val period = t.periods.getOrNull(periodIdx)
+        val first = t.periods.getOrNull(periodIdx)
+        val last = t.periods.getOrNull(periodIdx + span - 1) ?: first
 
-        // 手动添加的值班：详情里可以直接删除
-        if (c.custom) {
-            AlertDialog.Builder(this)
-                .setTitle(c.name)
-                .setMessage(buildString {
-                    append("课程/值班\n时间：$day 第${periodIdx + 1}节")
-                    if (c.room.isNotEmpty()) append("\n地点：").append(c.room)
-                })
-                .setPositiveButton("删除") { _, _ -> deleteCustomAt(dayIdx, periodIdx) }
-                .setNegativeButton("知道了", null)
-                .show()
-            return
+        val periodText = if (span > 1) "第${periodIdx + 1}-${periodIdx + span}节" else "第${periodIdx + 1}节"
+        val timeText = when {
+            first == null || first.start.isBlank() -> ""
+            span > 1 && last != null -> "${first.start} - ${last.end}"
+            else -> "${first.start} - ${first.end}"
+        }
+        val subtitle = listOf(day, periodText, timeText).filter { it.isNotEmpty() }.joinToString("  ")
+
+        val headerColor = if (c.custom) COLOR_CUSTOM else CourseColors.forCourse(c.name).second
+
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(10), dp(20), dp(6))
         }
 
-        AlertDialog.Builder(this)
-            .setTitle(c.name)
-            .setMessage(buildString {
-                append("时间：$day ")
-                if (period != null) {
-                    if (period.start.isBlank()) append(period.label)
-                    else append(period.start).append(" - ").append(period.end)
-                }
-                append("\n周次：").append(c.weeks.ifEmpty { "每周" })
-                if (c.room.isNotEmpty()) append("\n教室：").append(c.room)
-                if (c.teacher.isNotEmpty()) append("\n教师：").append(c.teacher)
+        fun row(label: String, value: String) {
+            val r = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            r.addView(TextView(this).apply {
+                text = label
+                textSize = 13f
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_sub))
+                minWidth = dp(52)
             })
-            .setPositiveButton("知道了", null)
+            r.addView(TextView(this).apply {
+                text = value
+                textSize = 14f
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_main))
+            })
+            body.addView(r, LinearLayout.LayoutParams(MATCH, WRAP).apply { setMargins(0, dp(7), 0, 0) })
+        }
+
+        if (c.custom) {
+            row("类型", "课程/值班（手动添加）")
+            if (c.room.isNotEmpty()) row("地点", c.room)
+        } else {
+            row("周次", c.weeks.ifEmpty { "每周" })
+            if (c.room.isNotEmpty()) row("教室", c.room)
+            if (c.teacher.isNotEmpty()) row("教师", c.teacher)
+        }
+
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(18), dp(20), dp(14))
+            setBackground(roundedTop(headerColor, dp(20)))
+        }
+        header.addView(TextView(this).apply {
+            text = c.name
+            textSize = 18f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(0xFFFFFFFF.toInt())
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        if (subtitle.isNotEmpty()) {
+            header.addView(TextView(this).apply {
+                text = subtitle
+                textSize = 12f
+                setTextColor((0xFFFFFFFF.toInt() and 0x00FFFFFF) or 0xD9000000.toInt())
+                setPadding(0, dp(5), 0, 0)
+            })
+        }
+        root.addView(header)
+        root.addView(body)
+
+        val dlg = AlertDialog.Builder(this)
+            .setView(root)
+            .setPositiveButton(if (c.custom) "删除" else "知道了", null)
             .show()
+        if (c.custom) {
+            dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { deleteCustomAt(dayIdx, periodIdx); dlg.dismiss() }
+            dlg.getButton(AlertDialog.BUTTON_NEGATIVE)
+        }
+        dlg.window?.setBackgroundDrawable(roundedColor(0xFFFFFFFF.toInt(), dp(20)))
     }
+
+    /** 上圆角矩形（对话框头部用） */
+    private fun roundedTop(color: Int, radius: Int): android.graphics.drawable.GradientDrawable =
+        android.graphics.drawable.GradientDrawable().apply {
+            shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+            cornerRadii = floatArrayOf(
+                radius.toFloat(), radius.toFloat(),
+                radius.toFloat(), radius.toFloat(),
+                0f, 0f, 0f, 0f,
+            )
+            setColor(color)
+        }
 
     /** 删除覆盖了 (dayIdx, periodIdx) 这格的值班 */
     private fun deleteCustomAt(dayIdx: Int, periodIdx: Int) {

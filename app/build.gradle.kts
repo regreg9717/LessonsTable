@@ -11,8 +11,8 @@ android {
         applicationId = "com.lightcourse.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 7
-        versionName = "2.1"
+        versionCode = 8
+        versionName = "2.2"
     }
 
     signingConfigs {
