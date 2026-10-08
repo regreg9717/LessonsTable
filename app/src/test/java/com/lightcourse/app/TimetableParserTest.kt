@@ -68,4 +68,15 @@ class TimetableParserTest {
         assertTrue(WeekLogic.matches("5周", 5))
         assertTrue(!WeekLogic.matches("5周", 6))
     }
+
+    @Test
+    fun defaultPeriodTimesMatchSchoolSchedule() {
+        val t = Timetable.DEFAULT_PERIOD_TIMES
+        // 下午 5 节 14:30 起、7 节 16:20 起（课间 10 分钟）；晚上 9 节 19:00 起
+        assertEquals("14:30" to "15:15", t[4])
+        assertEquals("15:25" to "16:10", t[5])
+        assertEquals("16:20" to "17:05", t[6])
+        assertEquals("17:15" to "18:00", t[7])
+        assertEquals("19:00" to "19:45", t[8])
+    }
 }
